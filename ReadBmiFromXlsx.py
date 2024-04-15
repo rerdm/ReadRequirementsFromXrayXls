@@ -38,40 +38,42 @@ class ExcelColumnIterator:
         self.global_bmi_list = []
 
         # Regular expression to Extract BMI from the Manual Test Steps
-        self.pattern = r'\bBMI-\d{1,4}\b'
+        #self.pattern = r'\bBMI-\d{1,4}\b'
+
+        self.pattern = r'BMI-\d{1,4}\b'
+
         self.test_case_name = ""
         self.row_number = 0
         self.test_key = ""
 
-        # Template of viel wich contains the BMI-analyzing
         self.date = datetime.now().strftime("%Y-%m-%d_%H-%M(%SSek)")
         self.new_xlsx_name = "Testcases_BundID"
 
         print("""
-        ################################################################################################################
-        #                                                                                                              #
-        #   BundID Requirements-analysis                                                                               #
-        #   This programm will parse a Xray-Xlsx and create a detailed overview of the Requirements-Coverage:          #
-        #   - You can see which requirements (BMIs) are linked to wich Test-Cases                                      #
-        #   - The header of the new generated Xlsx contains all requirements (sorted from small to large)              #
-        #   - If on requirement for a Test-Cases is found the programm will set a X in the dedicated column            #                                                                          
-        #   - You can also see the number of requirements linked to wich Test-Case                                     #
-        #                                                                                                              #
-        #   Created by : Rene Erdmann                                                                                  #                                                                                   
-        #                                                                                                              #
-        #    PRECONDITION - IMPORTANT:                                                                                 # 
-        #     1. You have to create a folder withe the name 'FilteredBmiByTestcase' and place at least one             #
-        #        valid Xray-Xlsx (export from Xray).                                                                   #
-        #        Mandatory Columns: [Key] , [Summary], [Manual Test Steps], [Test Repository Path]                     #
-        #     2. You have to create a folder with the name 'XrayXlsx'.                                                 #
-        #        In this folder the new Xlsx with the Requirement-analyses will be saved                               #
-        #     3. After this preparation you can continue the programm                                                  #
-        #                                                                                                              #         
-        ################################################################################################################
-        """)
+    #########################################################################################################
+    #                                                                                                       #
+    #   BundID Requirements-analysis                                                                        #
+    #   This programm will parse a Xray-Xlsx and create a detailed overview of the Requirements-Coverage:   #
+    #   - You can see which requirements (BMIs) are linked to wich Test-Cases                               #
+    #   - The header of the new generated Xlsx contains all requirements (sorted from small to large)       #
+    #   - If on requirement for a Test-Cases is found the programm will set a X in the dedicated column     #                                                                          
+    #   - You can also see the number of requirements linked to wich Test-Case                              #
+    #                                                                                                       #
+    #   Created by : Rene Erdmann                                                                           #                                                                                   
+    #                                                                                                       #
+    #    PRECONDITION - IMPORTANT:                                                                          # 
+    #     1. You have to create a folder withe the name 'XrayXlsx' and place at least one                   #
+    #        valid Xray-Xlsx (export from Xray).                                                            #
+    #        Mandatory Columns: [Key] , [Summary], [Manual Test Steps], [Test Repository Path]              #
+    #     2. You have to create a folder with the name 'FilteredBmiByTestcase'.                             #
+    #        In this folder the new Xlsx with the Requirement-analyses will be saved                        #
+    #     3. After this preparation you can continue the programm                                           #
+    #                                                                                                       #         
+    #########################################################################################################
+    """)
 
         optional_bmi_file_name_description = input(
-            f" - 1. Type in the name of the BundID-Suite wich will be analyzed (Optional-Parameter you can leave it"
+            f" - 1. Type in the name of the BundID-Suite wich will be analyzed \n      (Optional-Parameter you can leave it"
             f" blank and press enter)\n"
             f"      EXAMPLE  : YYYY-MM-TT_H-M-S_TestCase_BundID_[YOUR-NAME].xlsx  : > "
             )
@@ -86,6 +88,9 @@ class ExcelColumnIterator:
             self.file_path_to_new_xlsx = f"FilteredBmiByTestcase/{self.date}_" \
                                          f"{self.new_xlsx_name}" \
                                          f"_{optional_bmi_file_name_description}.xlsx"
+
+        if optional_bmi_file_name_description == "debug":
+            self.debug = True
 
         self.new_xlsx_delete_amount_of_unnecessary_row = 9
 
@@ -123,9 +128,9 @@ class ExcelColumnIterator:
         for xray_xlsx_file in xray_xlsx_files:
             if xray_xlsx_file.endswith(".xlsx"):
 
-                count_xlsx_files = count_xlsx_files + 1
                 print(f"     - [{count_xlsx_files}] - {xray_xlsx_file} - Available XRAy-Xlsx files")
                 xray_xlsx_files_array.append(xray_xlsx_file)
+                count_xlsx_files = count_xlsx_files + 1
 
         if count_xlsx_files == 1:
             xray_xlsx_files_array.append(xray_xlsx_file)
@@ -137,7 +142,7 @@ class ExcelColumnIterator:
             user_selected_xray_xlsx_number = input("     +  Choose number of XLSX : ")
 
             try:
-                user_selected_xray_xlsx_path = xray_xlsx_files_array[int(user_selected_xray_xlsx_number-1)]
+                user_selected_xray_xlsx_path = xray_xlsx_files_array[int(user_selected_xray_xlsx_number)]
 
             except Exception as e:
                 print(f"ERROR : XLSX with number {user_selected_xray_xlsx_number} not available - Error-Code : {e}")
@@ -352,6 +357,7 @@ class ExcelColumnIterator:
             print("An error occurred:", e)
 
         print(f" - 4. Programm successfully finished - file stored : {self.file_path_to_new_xlsx}")
+        input(" To close the programm press [Enter] ... ")
 
     def find_bmi_in_global_bmi_list_and_set_x(self, test_key, test_case_name, row_number, bmi_list_per_testcase_list, test_case_repo_name):
 
@@ -390,7 +396,15 @@ class ExcelColumnIterator:
                         count_bmis_per_testcase = count_bmis_per_testcase + 1
                         column_letter_to_paste_x = openpyxl.utils.get_column_letter(index+self.bmi_column_for_new_list)
                         sheet[column_letter_to_paste_x+str(row_number)] = "X"
-                        sheet[column_letter_to_paste_x+str(row_number)].alignment = Alignment(horizontal='center', vertical='center')
+
+                        sheet[column_letter_to_paste_x+str(row_number)].alignment = Alignment(
+                            horizontal='center',
+                            vertical='center')
+
+                        sheet[column_letter_to_paste_x+str(row_number)].fill = PatternFill(
+                            start_color="FDC7DD",
+                            end_color="FDC7DD",
+                            fill_type="solid")
 
                         if self.debug: # Logs will only be shown in debug mode
 
